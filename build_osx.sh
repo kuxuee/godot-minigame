@@ -6,4 +6,4 @@ if [ -d "$OSXCROSS_ROOT/target/bin" ]; then
   export PATH="$OSXCROSS_ROOT/target/bin:$PATH"
 fi
 
-scons platform=macos arch=universal target=template_release embed_resources=yes
+GODOT_MINIGAME_EMBED_RESOURCES=yes scons platform=macos arch=universal target=template_release

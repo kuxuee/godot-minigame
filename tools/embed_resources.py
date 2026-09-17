@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
+
+def resource_identifier(path):
+    """Return a C++-safe, collision-resistant identifier for a resource path."""
+    normalized = os.path.relpath(path).replace('\\', '/')
+    identifier = re.sub(r'[^0-9A-Za-z_]', '_', normalized)
+    if identifier and identifier[0].isdigit():
+        identifier = '_' + identifier
+    return identifier
 
 def embed_resources(sources, target):
     with open(target, 'w') as f:
@@ -15,7 +24,7 @@ def embed_resources(sources, target):
                 
             # Get relative path and create variable name
             rel_path = os.path.relpath(source).replace('\\', '/')
-            var_name = rel_path.replace('/', '_').replace('\\', '_').replace('.', '_')
+            var_name = resource_identifier(source)
             
             # Read file data
             with open(source, 'rb') as data_file:
@@ -41,7 +50,7 @@ def embed_resources(sources, target):
                 continue
                 
             rel_path = os.path.relpath(source).replace('\\', '/')
-            var_name = rel_path.replace('/', '_').replace('\\', '_').replace('.', '_')
+            var_name = resource_identifier(source)
             f.write(f'    {{"{rel_path.replace(chr(92), "/")}", embedded_{var_name}_data, embedded_{var_name}_size}},\n')
         
         f.write('    {nullptr, nullptr, 0} // Terminator\n')

@@ -57,6 +57,7 @@ public:
     godot::Error _setup_wechat_template(const godot::Ref<godot::EditorExportPreset> &p_preset, const godot::String &p_path);
     void _modify_json_configs(const godot::Ref<godot::EditorExportPreset> &p_preset, const godot::String &p_path);
     void _copy_export_images(const godot::Ref<godot::EditorExportPreset> &p_preset, const godot::String &p_path);
+    godot::Error _install_wechat_bridge(const godot::String &p_path);
     godot::Error _prepare_native_audio_runtime(const godot::Ref<godot::EditorExportPreset> &p_preset, const godot::String &p_path);
     godot::Error _finalize_native_audio_runtime(const godot::String &p_path, bool p_plugin_exported);
     godot::Error _merge_native_audio_subpackages(const godot::String &p_path);

@@ -90,7 +90,7 @@ if env["target"] in ["editor", "template_debug"]:
         print("Not including class reference as we're targeting a pre-4.3 baseline.")
 
 # Resource embedding support
-if ARGUMENTS.get("embed_resources", "no") == "yes":
+if os.environ.get("GODOT_MINIGAME_EMBED_RESOURCES", "").lower() in ("1", "true", "yes"):
     print("Building with embedded resources...")
     env.Append(CPPDEFINES=["EMBED_RESOURCES"])
     
@@ -108,6 +108,10 @@ if ARGUMENTS.get("embed_resources", "no") == "yes":
         resource_gen = env.Command("src/resources/embedded_resources.gen.cpp", 
                                  resource_files,
                                  f'"{python_exec}" tools/embed_resources.py $SOURCES $TARGET')
+        # Regenerate when the generator changes, not only when an embedded
+        # resource changes. Otherwise stale generated C++ can survive a
+        # sanitizer fix such as a filename containing '-'.
+        env.Depends(resource_gen, "tools/embed_resources.py")
         sources.append(resource_gen)
 
 # .dev doesn't inhibit compatibility, so we don't need to key it.

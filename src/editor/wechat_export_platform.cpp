@@ -668,6 +668,13 @@ Error WeChatExportPlatform::_export_project(const Ref<EditorExportPreset> &p_pre
         _simulate_export_progress(export_progress_value, 70.0, 260, String::utf8("模板就绪，准备打包..."));
     }
 
+    err = _install_wechat_bridge(export_dir);
+    if (err != OK) {
+        _set_export_progress(100.0, String::utf8("微信桥接层安装失败"));
+        _hide_download_progress_dialog();
+        return err;
+    }
+
     err = _prepare_native_audio_runtime(p_preset, export_dir);
     if (err != OK) {
         _set_export_progress(100.0, String::utf8("导出失败"));
@@ -938,6 +945,45 @@ WeChatExportPlatform::WeChatExportPlatform() {
     if (!logo.is_valid()) {
         UtilityFunctions::printerr("[GodotMinigame][WeChatExportPlatform] logo is still null after all fallbacks");
     }
+}
+
+Error WeChatExportPlatform::_install_wechat_bridge(const String &p_path) {
+    const String bridge_source_path = "res://addons/godot-minigame/resources/scripts/wechat-bridge.js";
+    if (!FileAccess::file_exists(bridge_source_path)) {
+        UtilityFunctions::push_error("WeChat bridge source is missing: " + bridge_source_path);
+        return ERR_FILE_NOT_FOUND;
+    }
+
+    const String bridge_output_path = p_path.path_join("wechat-bridge.js");
+    const PackedByteArray bridge_source = FileAccess::get_file_as_bytes(bridge_source_path);
+    if (bridge_source.is_empty()) {
+        return ERR_FILE_CANT_READ;
+    }
+    Ref<FileAccess> bridge_output = FileAccess::open(bridge_output_path, FileAccess::WRITE);
+    if (bridge_output.is_null()) {
+        return FileAccess::get_open_error();
+    }
+    bridge_output->store_buffer(bridge_source);
+    bridge_output->close();
+
+    const String game_script_path = p_path.path_join("game.js");
+    Ref<FileAccess> game_script_file = FileAccess::open(game_script_path, FileAccess::READ);
+    if (game_script_file.is_null()) {
+        return FileAccess::get_open_error();
+    }
+    const String game_script = game_script_file->get_as_text();
+    game_script_file->close();
+    if (game_script.contains("wechat-bridge")) {
+        return OK;
+    }
+
+    game_script_file = FileAccess::open(game_script_path, FileAccess::WRITE);
+    if (game_script_file.is_null()) {
+        return FileAccess::get_open_error();
+    }
+    game_script_file->store_string("import './wechat-bridge'\n" + game_script);
+    game_script_file->close();
+    return OK;
 }
 
 Error WeChatExportPlatform::_prepare_native_audio_runtime(const Ref<EditorExportPreset> &p_preset, const String &p_path) {

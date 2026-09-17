@@ -41,7 +41,24 @@ git submodule update --init --recursive
 2. 在编辑器里启用插件
 3. 在设置面板配置模板分发源：
    `Source / Owner / Repo / Tag`
-4. 导出时插件会自动选择模板并完成下载、缓存和解压
+   4. 导出时插件会自动选择模板并完成下载、缓存和解压
+
+## 微信能力桥接
+
+每次“小游戏”导出都会向输出目录写入并首先加载 `wechat-bridge.js`。它向 GDScript 暴露 `WeChatBridge`，用于主动分享和激励视频广告；不依赖 Godot 中国站的 `WeChatSDK` 单例。
+
+在项目中预加载 `res://addons/godot-minigame/wechat_bridge.gd` 后，可调用：
+
+```gdscript
+var wechat := WeChatBridge.new()
+wechat.share_app_message({"title": "邀请你一起玩"})
+wechat.show_rewarded_video("ad-unit-xxx", func(result):
+    if result.get("ok", false) and result.get("isEnded", false):
+        print("广告完整观看")
+)
+```
+
+桥接仅在插件导出的微信小游戏包中可用；桌面和普通 Web 导出会返回不可用结果。
 
 ## 模板分发约定
 
